@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zdn.EasyCarServer.dao.FeedDao">
+  <!-- 动态部分 -->
+  <resultMap id="FeedMap" type="com.zdn.EasyCarServer.model.Feed">
+    <id column="feed_id" jdbcType="VARCHAR" property="feedId" />
+    <result column="feed_info" jdbcType="VARCHAR" property="feedInfo" />
+    <result column="feed_title" jdbcType="VARCHAR" property="feedTitle" />
+    <result column="state" jdbcType="VARCHAR" property="state" />
+    <result column="is_like" jdbcType="TINYINT" property="like" />
+    <result column="like_num" jdbcType="INTEGER" property="likeNum" />
+
+
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <!-- 评论数 -->
+    <association column="id" property="commentNum" select="selectCommentNum"/>
+    <!-- 用户信息 -->
+    <association column="user_id" property="user" select="selectUserById"/>
+    <!-- 点赞列表 -->
+    <collection column="id" property="likeList" select="selectFeedLikeById"/>
+  </resultMap>
+  <!-- 分页 -->
+  <sql id="page_size">
+    <if test="pageNum!=null and pageSize!=null">
+      LIMIT ${pageSize * (pageNum -1)}, #{pageSize}
+    </if>
+  </sql>
+  <!-- 动态总条数 -->
+  <select id="feedTotal" parameterType="FeedSearchVO" resultType="Integer">
+    SELECT count(feed_id)
+    FROM feed
+    <where>
+      state = #{state}
+      <if test="searchUserId != null and searchUserId != ''">
+        and user_id = #{searchUserId}
+      </if>
+    </where>
+  </select>
+
+  <!-- 动态列表 -->
+  <select id="pageFeed" parameterType="FeedSearchVO" resultMap="FeedMap">
+    SELECT f.feed_id, f.feed_info, f.feed_title, f.url, f.user_id, f.create_time,
+    (
+      SELECT count(tfa.id)
+      FROM feed_action tfa
+      WHERE tfa.type = 0
+        AND tfa.feed_id = f.feed_id
+        AND tfa.user_id = #{userId}
+    ) is_like,
+    (
+      SELECT count(tfa.id)
+      FROM feed_action tfa
+      WHERE tfa.type = 0
+        AND tfa.feed_id = f.feed_id
+    )like_num
+    FROM feed f
+    WHERE f.state = #{state}
+    <if test="searchUserId != null and searchUserId != ''">
+      and f.user_id = #{searchUserId}
+    </if>
+    ORDER BY f.create_time DESC
+    <include refid="page_size"/>
+  </select>
+
+
+  <!-- 评论数 -->
+  <select id="selectCommentNum" parameterType="String" resultType="INTEGER">
+    SELECT count(id)
+    FROM feed_comment
+    WHERE type = 0
+      AND feed_id = #{feed_id}
+  </select>
+
+  <!-- 用户部分 -->
+  <resultMap id="UserMap" type="com.zdn.EasyCarServer.model.User">
+    <id column="user_id" jdbcType="VARCHAR" property="user_id" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+  </resultMap>
+  <!-- 通过id查找用户 -->
+  <select id="selectUserById" parameterType="String" resultMap="UserMap">
+    select user_id, username
+    from user
+    where user_id = #{user_id}
+  </select>
+
+  <!-- 点赞部分 -->
+  <resultMap id="LikeMap" type="com.zdn.EasyCarServer.model.Like">
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+  </resultMap>
+  <!-- 点赞用户 -->
+  <select id="selectFeedLikeById" parameterType="String" resultMap="LikeMap">
+    SELECT tfa.user_id, tu.username
+    FROM feed_action tfa
+    LEFT OUTER JOIN user tu
+    ON tfa.user_id = tu.user_id
+    WHERE type = 0
+      AND tfa.feed_id = #{feed_id}
+  </select>
+  <!-- 查询是否点赞 -->
+  <select id="selectIsLike" parameterType="Map" resultType="Boolean">
+    SELECT count(id) is_like
+    FROM feed_action
+    WHERE type = 0
+      AND  user_id = #{user_id}
+      AND feed_id = #{feed_id}
+    limit 1
+  </select>
+  <!-- 点赞数 -->
+  <select id="selectLikeNum" parameterType="String" resultType="Integer">
+    SELECT count(id)
+    FROM feed_action
+    WHERE type = 0
+      AND feed_id = #{feed_id}
+  </select>
+
+
+
+</mapper>

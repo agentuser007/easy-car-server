@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: EasyCar
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/easy_car?useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  mvc:
+    static-path-pattern: /image/**
+  resources:
+    ##需要映射的地址
+    static-locations: file:/Users/dzzzg8/Desktop/easycar
+
+
+rss-path:
+  windowsPath: D:/data/rss
+  linuxPath: /Users/dzzzg8/Desktop/easycar
+
+
+mybatis:
+  type-aliases-package: com.zdn.EasyCarServer.model
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
+
+

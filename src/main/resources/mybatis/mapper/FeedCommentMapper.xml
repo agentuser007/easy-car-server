@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zdn.EasyCarServer.dao.FeedCommentDao">
+  <!-- 评论相关 -->
+  <resultMap id="CommentMap" type="com.zdn.EasyCarServer.model.Comment">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="feed_id" jdbcType="VARCHAR" property="feedId" />
+    <result column="comment_info" jdbcType="VARCHAR" property="commentInfo" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <!-- 用户信息 -->
+    <association column="user_id" property="user" select="selectUserById"/>
+  </resultMap>
+  <!-- 分页 -->
+  <sql id="page_size">
+    <if test="pageNum!=null and pageSize!=null">
+      LIMIT ${pageSize * (pageNum -1)},#{pageSize}
+    </if>
+  </sql>
+  <!-- 评论总条数 -->
+  <select id="commentTotal" resultType="Integer">
+    SELECT count(id)
+    FROM feed_comment
+    WHERE state = 1
+  </select>
+  <!-- 评论字段 -->
+  <sql id="Comment_List">
+    id, feed_id, user_id, comment_info, create_time
+  </sql>
+  <!-- 评论列表 -->
+  <select id="pageFeedComment" parameterType="FeedCommentVO" resultMap="CommentMap">
+    SELECT
+    <include refid="Comment_List" />
+    FROM feed_comment
+    WHERE state = 1
+    AND feed_id = #{feedId}
+    ORDER BY create_time DESC
+    <include refid="page_size"/>
+  </select>
+
+
+  <!-- 用户相关 -->
+  <resultMap id="UserMap" type="com.zdn.EasyCarServer.model.User">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="avatar" jdbcType="VARCHAR" property="avatar" />
+    <result column="im_token" jdbcType="VARCHAR" property="imToken" />
+  </resultMap>
+  <!-- 通过id查找用户 -->
+  <select id="selectUserById" parameterType="String" resultMap="UserMap">
+    select user_id, username
+    from user
+    where user_id = #{user_id}
+  </select>
+</mapper>
