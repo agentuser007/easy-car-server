@@ -1,6 +1,4 @@
 # easy-car-server
-Based on the relevant content from the article you are reading, here is a possible README GitHub markdown for the server app:
-
 
 This is the server application for the Android easy car App, which provides the backend functionality and data management for the app.
 
